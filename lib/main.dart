@@ -46,46 +46,127 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  int selectedIndex = 0;
+  @override
+  Widget build(BuildContext context) {
+    Widget page;
+    switch (selectedIndex) {
+      case 0:
+        page = GeneratorPage();
+        break;
+      case 1:
+        page = FavoritesPage();
+      default:
+        throw UnimplementedError('no widget for $selectedIndex');
+    }
+
+    return Scaffold(
+      body: Row(
+        children: [
+          SafeArea(
+            child: NavigationRail(
+              extended: false,
+              destinations: [
+                NavigationRailDestination(
+                  icon: Icon(Icons.home),
+                  label: Text('Home'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.favorite),
+                  label: Text('Favorites'),
+                ),
+              ],
+              selectedIndex: selectedIndex,
+              onDestinationSelected: (value) {
+                setState(() {
+                  selectedIndex = value;
+                });
+              },
+            ),
+          ),
+          Expanded(
+            child: Container(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              child: page,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FavoritesPage extends StatelessWidget {
+  const FavoritesPage({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    var names = appState.favorites.toList();
+    return ListView(
+      children: [
+        for (var name in names)
+          Column(
+            children: [
+              ListTile(
+                title: Text(name.toString()),
+                leading: Icon(Icons.label),
+              ),
+              SizedBox(height: 5)
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+class GeneratorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
 
     IconData icon;
-    appState.favorites.contains(pair) == true
-        ? icon = Icons.favorite
-        : icon = Icons.favorite_border;
+    if (appState.favorites.contains(pair)) {
+      icon = Icons.favorite;
+    } else {
+      icon = Icons.favorite_border;
+    }
 
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            BigCard(pair: pair),
-            SizedBox(height: 10),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    appState.toggleFavorite();
-                  },
-                  icon: Icon(icon),
-                  label: Text('Like'),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    print('button pressed!');
-                    appState.goNext();
-                  },
-                  child: Text('Next'),
-                ),
-              ],
-            ),
-          ],
-        ),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          BigCard(pair: pair),
+          SizedBox(height: 10),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  appState.toggleFavorite();
+                },
+                icon: Icon(icon),
+                label: Text('Like'),
+              ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () {
+                  appState.goNext();
+                },
+                child: Text('Next'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
